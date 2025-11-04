@@ -45,9 +45,11 @@ fun TimerDisplay(
         is TimerState.Running -> {
             if (initialMillis > 0) timerState.remainingMillis.toFloat() / initialMillis.toFloat() else 0f
         }
+
         is TimerState.Paused -> {
             if (initialMillis > 0) timerState.remainingMillis.toFloat() / initialMillis.toFloat() else 0f
         }
+
         else -> 1f
     }
 

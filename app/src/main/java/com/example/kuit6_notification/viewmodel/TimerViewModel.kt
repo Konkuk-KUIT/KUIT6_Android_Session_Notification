@@ -1,6 +1,7 @@
 package com.example.kuit6_notification.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kuit6_notification.model.TimerState
 import com.example.kuit6_notification.util.TimeFormatter
@@ -11,7 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class TimerViewModel : ViewModel() {
+class TimerViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _timerState = MutableStateFlow<TimerState>(TimerState.Idle)
     val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
@@ -22,7 +23,7 @@ class TimerViewModel : ViewModel() {
     private val _minutes = MutableStateFlow(0)
     val minutes: StateFlow<Int> = _minutes.asStateFlow()
 
-    private val _seconds = MutableStateFlow(10)
+    private val _seconds = MutableStateFlow(10)  // 기본값 10초
     val seconds: StateFlow<Int> = _seconds.asStateFlow()
 
     private var timerJob: Job? = null
@@ -55,10 +56,12 @@ class TimerViewModel : ViewModel() {
                     startCountdown(initialMillis)
                 }
             }
+
             is TimerState.Paused -> {
                 _timerState.value = TimerState.Running(currentState.remainingMillis)
                 startCountdown(currentState.remainingMillis)
             }
+
             else -> {}
         }
     }
@@ -74,14 +77,13 @@ class TimerViewModel : ViewModel() {
     fun resetTimer() {
         timerJob?.cancel()
         _timerState.value = TimerState.Idle
-        // Keep the time input values, don't reset them
     }
 
     private fun startCountdown(startMillis: Long) {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
             var remainingMillis = startMillis
-            val updateInterval = 100L
+            val updateInterval = 50L
 
             while (remainingMillis > 0) {
                 delay(updateInterval)
@@ -89,7 +91,6 @@ class TimerViewModel : ViewModel() {
 
                 if (remainingMillis <= 0) {
                     _timerState.value = TimerState.Completed
-                    // TODO: Trigger notification when service is implemented
                 } else {
                     _timerState.value = TimerState.Running(remainingMillis)
                 }
@@ -98,8 +99,13 @@ class TimerViewModel : ViewModel() {
     }
 
     fun getInitialMillis(): Long {
-        return when (val state = _timerState.value) {
-            is TimerState.Idle -> TimeFormatter.toMillis(_hours.value, _minutes.value, _seconds.value)
+        return when (_timerState.value) {
+            is TimerState.Idle -> TimeFormatter.toMillis(
+                _hours.value,
+                _minutes.value,
+                _seconds.value
+            )
+
             is TimerState.Running -> initialMillis
             is TimerState.Paused -> initialMillis
             is TimerState.Completed -> initialMillis

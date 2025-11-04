@@ -47,6 +47,7 @@ fun TimerControls(
                     Text("시작")
                 }
             }
+
             is TimerState.Running -> {
                 Button(
                     onClick = onPause,
@@ -73,6 +74,7 @@ fun TimerControls(
                     Text("리셋")
                 }
             }
+
             is TimerState.Paused -> {
                 Button(
                     onClick = onStart,
@@ -98,6 +100,7 @@ fun TimerControls(
                     Text("리셋")
                 }
             }
+
             is TimerState.Completed -> {
                 Button(
                     onClick = onReset,
